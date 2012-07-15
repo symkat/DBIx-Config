@@ -17,6 +17,7 @@ my $tests = [
                 'dbi:mysql:somedb',
                 'username',
                 'password',
+                {},
             ],
         title => "Hashref connections work.",
     },
@@ -27,12 +28,13 @@ my $tests = [
                 'dbi:mysql:somedb',
                 'username',
                 'password',
+                {},
             ],
         title => "Array connections work.",
     },
     {
         put => [ 'DATABASE' ],
-        get => [ 'DATABASE', undef, undef ],
+        get => [ 'DATABASE', undef, undef, {} ],
         title => "DSN gets the first element name.",
     },
     {
@@ -49,7 +51,7 @@ my $tests = [
     },
     {
         put => [ 'DATABASE', 'USERNAME', { hostname => 'hostname' } ],
-        get => [ 'DATABASE', 'USERNAME', { hostname => 'hostname' } ],
+        get => [ 'DATABASE', 'USERNAME', undef, { hostname => 'hostname' } ],
         title => "Ensure (string, string, hashref) format works correctly.",
     },
     {

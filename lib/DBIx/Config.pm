@@ -3,14 +3,18 @@ use 5.005;
 use warnings;
 use strict;
 use base 'DBI';
+use DBIx::Config::db;
+use DBIx::Config::st;
 
 our $VERSION = '0.000001'; # 0.0.1
 $VERSION = eval $VERSION;
 
 our @CONFIG_PATHS = ( './dbic', $ENV{HOME} . '/.dbic', '/etc/dbic' );
 
-sub connection {
+sub connect {
     my ( $class, @info ) = @_;
+    
+    print "Inside connect in ::root\n";
 
     my $config = $class->_make_config(@info);
 
@@ -19,7 +23,7 @@ sub connection {
     $config = $class->load_credentials($config)
         unless $config->{dsn} =~ /dbi:/i;
 
-    return $class->SUPER::connect( $config );
+    return $class->SUPER::connect( __PACKAGE__->_dbi_credentials($config) );
 }
 
 # Normalize arguments into a single hash.  If we get a single hashref,

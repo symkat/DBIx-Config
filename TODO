@@ -1,0 +1,5 @@
+1)  Audit lib/DBIx/Config.pm for being pretty
+2)  Audit the documentation, fill in overriding information
+3)  Test overriding load_credentials
+4)  Test overriding filter_connections
+5)  Push to CPAN

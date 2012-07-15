@@ -2,4 +2,7 @@
 2)  Audit the documentation, fill in overriding information
 3)  Test overriding load_credentials
 4)  Test overriding filter_connections
-5)  Push to CPAN
+5)  Make config_paths contain all the DBIx::Class::Schema::Config vars + 
+    ones specific to DBI.
+6)  Get reviews
+7)  Push to CPAN

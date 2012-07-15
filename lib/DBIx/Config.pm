@@ -11,6 +11,12 @@ $VERSION = eval $VERSION;
 
 our @CONFIG_PATHS = ( './dbic', $ENV{HOME} . '/.dbic', '/etc/dbic' );
 
+my $meta = {
+    _filter_loaded_credentials => sub { return $_[0] },
+    _load_credentials          => \&default_load_credentials,
+};
+
+
 sub connect {
     my ( $class, @info ) = @_;
     
@@ -20,7 +26,7 @@ sub connect {
 
     # Take responsibility for passing through normal-looking
     # credentials.
-    $config = $class->load_credentials($config)
+    $config = $class->load_credentials->($config)
         unless $config->{dsn} =~ /dbi:/i;
 
     return $class->SUPER::connect( __PACKAGE__->_dbi_credentials($config) );
@@ -56,8 +62,8 @@ sub _dbi_credentials {
     );
 }
 
-sub load_credentials {
-    my ( $class, $connect_args ) = @_;
+sub default_load_credentials {
+    my ( $connect_args ) = @_;
     require Config::Any; # Only loaded if we need to load credentials.
 
     # While ->connect is responsible for returning normal-looking
@@ -66,7 +72,7 @@ sub load_credentials {
     return $connect_args if $connect_args->{dsn} =~ /^dbi:/i; 
 
     my $ConfigAny = Config::Any->load_stems( 
-        { stems => $class->config_paths, use_ext => 1 } 
+        { stems => __PACKAGE__->config_paths, use_ext => 1 } 
     );
 
     for my $cfile ( @$ConfigAny ) {
@@ -74,7 +80,7 @@ sub load_credentials {
             for my $database ( keys %{$cfile->{$filename}} ) {
                 if ( $database eq $connect_args->{dsn} ) {
                     my $loaded_credentials = $cfile->{$filename}->{$database};
-                    return $class->filter_loaded_credentials(
+                    return __PACKAGE__->filter_loaded_credentials->(
                         $loaded_credentials,$connect_args
                     );
                 }
@@ -83,9 +89,21 @@ sub load_credentials {
     }
 }
 
+sub filter_loaded_credentials {
+    my $class = shift;
+    $meta->{_filter_loaded_credentials} = shift if @_;
+    return $meta->{_filter_loaded_credentials};
+}
+
+sub load_credentials {
+    my $class = shift;
+    $meta->{_load_credentials} = shift if @_;
+    return $meta->{_load_credentials};
+}
+
 # Intended to be sub-classed, we'll just return the
 # credentials we used in the first place.
-sub filter_loaded_credentials { $_[1] };
+#sub filter_loaded_credentials { $_[1] };
 
 sub config_paths {
     my $class = shift;

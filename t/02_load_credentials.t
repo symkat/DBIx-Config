@@ -105,7 +105,7 @@ my $tests = [
 
 for my $test ( @$tests ) {
     is_deeply( 
-        DBIx::Config->load_credentials( 
+        DBIx::Config->load_credentials->( 
             DBIx::Config->_make_config(
                 ref $test->{put} eq 'ARRAY' ? @{$test->{put}} : $test->{put})
         ), $test->{get}, $test->{title} );

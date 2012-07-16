@@ -2,9 +2,7 @@ package DBIx::Config;
 use 5.005;
 use warnings;
 use strict;
-use base 'DBI';
-use DBIx::Config::db;
-use DBIx::Config::st;
+use DBI;
 
 our $VERSION = '0.000001'; # 0.0.1
 $VERSION = eval $VERSION;
@@ -44,7 +42,7 @@ sub connect {
     $config = $self->default_load_credentials($config)
         unless $config->{dsn} =~ /dbi:/i;
 
-    return $self->SUPER::connect( $self->_dbi_credentials($config) );
+    return DBI->connect( $self->_dbi_credentials($config) );
 }
 
 # Normalize arguments into a single hash.  If we get a single hashref,

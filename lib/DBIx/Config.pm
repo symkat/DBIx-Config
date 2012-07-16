@@ -48,7 +48,7 @@ sub connect {
 # Normalize arguments into a single hash.  If we get a single hashref,
 # return it.
 # Check if $user and $pass are hashes to support things like
-# ->connect( 'CONFIG_FILE', { hostname => 'db.foo.com' } );
+# ->connect( 'CONFIG_FILE', { hostname => 'db.foo.com' } ); 
 
 sub _make_config {
     my ( $class, $dsn, $user, $pass, $dbi_attr, $extra_attr ) = @_;
@@ -64,6 +64,10 @@ sub _make_config {
     }; 
 }
 
+# DBI's ->connect expects 
+# ( "dsn", "user", "password", { option_key => option_value } )
+# this function changes our friendly hashref into this format.
+
 sub _dbi_credentials {
     my ( $class, $config ) = @_;
 
@@ -78,6 +82,9 @@ sub _dbi_credentials {
 sub default_load_credentials {
     my ( $self, $connect_args ) = @_;
 
+    # To allow overriding without subclassing, if you pass a coderef
+    # to ->load_credentials, we will replace our default load_credentials
+    # without that function.
     if ( $self->load_credentials ) {
         return $self->load_credentials->( $self, $connect_args );
     }
@@ -117,6 +124,7 @@ sub default_filter_loaded_credentials {
     return $loaded_credentials;
 }
 
+# Assessors
 sub config_paths {
     my $self = shift;
     $self->{config_paths} = shift if @_;
@@ -143,21 +151,210 @@ DBIx::Config - Manage credentials for DBI
 
 =head1 DESCRIPTION
 
+DBIx::Config wraps around L<DBI> to provide a simple way of loading database 
+credentials from a file.  The aim is make it simpler for operations teams to 
+manage database credentials.  
+
 =head1 SYNOPSIS
+
+Given a file like C</etc/dbi.yaml>, containing:
+
+    MY_DATABASE:
+        dsn:            "dbi:Pg:host=localhost;database=blog"
+        user:           "TheDoctor"
+        password:       "dnoPydoleM"
+        TraceLevel:     1
+
+The following code would allow you to connect the database:
+
+    #!/usr/bin/perl
+    use warnings;
+    use strict;
+    use DBIx::Config;
+
+    my $dbh = DBIx::Config->connect( "MY_DATABASE" );
+
+Of course, backwards compatibility is kept, so the following would also work:
+
+    #!/usr/bin/perl
+    use warnings;
+    use strict;
+    use DBIx::Config;
+
+    my $dbh = DBIx::Config->connect(
+        "dbi:Pg:host=localhost;database=blog", 
+        "TheDoctor", 
+        "dnoPydoleM", 
+        { 
+            TraceLevel => 1, 
+        },
+    );
 
 =head1 CONFIG FILES
 
+By default the following configuration files are examined, in order listed,
+for credentials.  The first file which has the given credentials is used.
+
+=over 4
+
+=item * ./dbic 
+=item * ./dbi
+=item * $HOME/.dbic
+=item * $HOME/.dbi 
+=item * /etc/dbic
+=item * /etc/dbi
+
+=back
+
 =head1 OVERRIDING
+
+DBIx::Config 
+
+=head2 config_files
+
+The configuration files may be changed by setting an accessor:
+
+    #!/usr/bin/perl
+    use warnings;
+    use strict;
+    use DBIx::Config
+
+    my $DBI = DBIx::Config->new(config_files => ['./dbcreds', '/etc/dbcreds']);
+    my $dbh = $DBI->connect( "MY_DATABASE" );
+
+This would check, in order, C<dbcreds> in the current directory, and then C</etc/dbcreds>
+
+=head2 filter_loaded_credentials
+
+You may want to change the credentials that have been loaded, before they are used
+to connect to the DB.  A coderef is taken that will allow you to make programatic
+changes to the loaded credentials, while giving you access to the origional data
+structure used to connect.
+
+    DBIx::Config->new(
+        filter_loaded_credentials => sub {
+            my ( $self, $loaded_credentials, $connect_args ) = @_;
+            ...
+            return $loaded_credentials;
+        }
+    )
+
+Your coderef will take three arguments.  
+
+=over 4
+
+=item * C<$self>, the instance of DBIx::Config your code was called from. C
+
+=item * C<$loaded_credentials>, the credentials loaded from the config file.
+
+=item * C<$connect_args>, the normalized data structure of the inital C<connect> call.
+
+=back
+
+Your coderef should return the same structure given by C<$loaded_credentials>.
+
+As an example, the following code will use the credentials from C</etc/dbi>, but
+use its a hostname defined in the code itself.
+
+C</etc/dbi> (note C<host=%s>):
+
+    MY_DATABASE:
+        dsn: "DBI:mysql:database=students;host=%s;port=3306"
+        user: "WalterWhite"
+        password: "relykS"
+
+The Perl script:
+
+    #!/usr/bin/perl
+    use warnings;
+    use strict;
+    use DBIx::Config;
+
+    my $dbh = DBIx::Config->new(
+        # If we have %s, replace it with a hostname.
+        filter_loaded_credentials => sub {
+            my ( $self, $loaded_credentials, $connect_args ) = @_;
+
+                if ( $loaded_credentials->{dsn} =~ /\%s/ ) {
+                    $loaded_credentials->{dsn} = sprintf( 
+                        $loaded_credentials->{dsn}, $connect_args->{hostname} 
+                    );
+                }
+                return $loaded_credentials;
+            }
+        )->connect( "MY_DATABASE", { hostname => "127.0.0.1" } );
+
+=head2 load_credentials
+
+Override this function to change the way that DBIx::Config loads credentials. 
+The function takes the class name, as well as a hashref.
+
+If you take the route of having ->connect('DATABASE') used as a key for whatever 
+configuration you are loading, DATABASE would be $config->{dsn}
+
+    $obj->connect( 
+        "SomeTarget", 
+        "Yuri", 
+        "Yawny", 
+        { 
+            TraceLevel => 1 
+        } 
+    );
+
+Would result in the following data structure as $config in load_credentials($self, $config):
+
+    {
+        dsn             => "SomeTarget",
+        user            => "Yuri",
+        password        => "Yawny",
+        TraceLevel      => 1,
+    }
+
+Currently, load_credentials will NOT be called if the first argument to ->connect() 
+looks like a valid DSN. This is determined by match the DSN with /^dbi:/i.
+
+The function should return the same structure. For instance:
+
+    #!/usr/bin/perl
+    use warnings;
+    use strict;
+    use DBIx::Config;
+    use LWP::Simple;
+    use JSON;
+
+    my $DBI = DBIx::Config->new(
+        load_credentials => sub {
+            my ( $self, $config ) = @_;
+            
+            return decode_json( 
+                get( "http://someserver.com/v1.0/database?name=" . $config->{dsn} )
+            );
+        } 
+    )
+
+    my $dbh = $DBI->connect( "MAGIC_DATABASE" );
+
+=head1 SEE ALSO
+
+=over 4
+
+=item * L<DBIx::Class::Schema::Config>
+
+=back
 
 =head1 AUTHOR
 
-SymKat I<E<lt>symkat@symkat.comE<gt>>
+=over 4
+
+=item * Kaitlyn Parkhurst (SymKat) I<E<lt>symkat@symkat.comE<gt>> (L<http://symkat.com/>)
+
+=back
 
 =head1 CONTRIBUTORS
 
 =over 4
 
-=item * 
+=item * Your Name (YourHandle )
 
 =back
 

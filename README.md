@@ -192,15 +192,15 @@ The function should return the same structure. For instance:
 
 # COPYRIGHT
 
-Copyright (c) 2012 the Daemon::Control ["AUTHOR"](#AUTHOR) and 
-["CONTRIBUTORS"](#CONTRIBUTORS) as listed above.
+Copyright (c) 2012 the DBIx::Config ["AUTHOR"](#AUTHOR) and ["CONTRIBUTORS"](#CONTRIBUTORS) as listed 
+above.
 
 # LICENSE
 
-This library is free software and may be distributed 
-under the same terms as perl itself.
+This library is free software and may be distributed under the same terms as 
+perl itself.
 
 # AVAILABILITY
 
-The latest version of this software is available at
+The latest version of this software is available at 
 [https://github.com/symkat/DBIx-Config](https://github.com/symkat/DBIx-Config)

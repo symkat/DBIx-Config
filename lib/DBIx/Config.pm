@@ -365,16 +365,16 @@ The function should return the same structure. For instance:
 
 =head1 COPYRIGHT
 
-Copyright (c) 2012 the Daemon::Control L</AUTHOR> and 
-L</CONTRIBUTORS> as listed above.
+Copyright (c) 2012 the DBIx::Config L</AUTHOR> and L</CONTRIBUTORS> as listed 
+above.
 
 =head1 LICENSE
 
-This library is free software and may be distributed 
-under the same terms as perl itself.
+This library is free software and may be distributed under the same terms as 
+perl itself.
 
 =head1 AVAILABILITY
 
-The latest version of this software is available at
+The latest version of this software is available at 
 L<https://github.com/symkat/DBIx-Config>
 

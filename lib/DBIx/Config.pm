@@ -198,10 +198,15 @@ for credentials.  The first file which has the given credentials is used.
 =over 4
 
 =item * ./dbic 
+
 =item * ./dbi
+
 =item * $HOME/.dbic
+
 =item * $HOME/.dbi 
+
 =item * /etc/dbic
+
 =item * /etc/dbi
 
 =back

@@ -49,11 +49,11 @@ By default the following configuration files are examined, in order listed,
 for credentials.  The first file which has the given credentials is used.
 
 - ./dbic 
-=item \* ./dbi
-=item \* $HOME/.dbic
-=item \* $HOME/.dbi 
-=item \* /etc/dbic
-=item \* /etc/dbi
+- ./dbi
+- $HOME/.dbic
+- $HOME/.dbi 
+- /etc/dbic
+- /etc/dbi
 
 # OVERRIDING
 

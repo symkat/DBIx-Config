@@ -4,9 +4,9 @@ use strict;
 use DBIx::Config;
 use Test::More;
 
-DBIx::Config->config_paths( [ "etc/config", "t/etc/config" ] );
-
-my $dbh = DBIx::Config->connect( "TEST" );
+my $dbh = DBIx::Config
+    ->new( { config_paths => [ "etc/config", "t/etc/config" ]  } )
+    ->connect( "TEST" );
 
 ok my $sth = $dbh->prepare( "CREATE TABLE hash( key string, value string )" );
    ok $sth->execute();

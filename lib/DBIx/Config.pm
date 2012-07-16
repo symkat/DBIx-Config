@@ -9,27 +9,42 @@ use DBIx::Config::st;
 our $VERSION = '0.000001'; # 0.0.1
 $VERSION = eval $VERSION;
 
-our @CONFIG_PATHS = ( './dbic', $ENV{HOME} . '/.dbic', '/etc/dbic' );
+sub new {
+    my ( $class, $args ) = @_;
+    
+    my $self = bless {
+        config_paths => [ 
+            './dbic', './dbi',  
+            $ENV{HOME} . '/.dbic',  $ENV{HOME} . '/.dbi',
+            '/etc/dbic', '/etc/dbi',
+        ],
+    }, $class;
 
-my $meta = {
-    _filter_loaded_credentials => sub { return $_[0] },
-    _load_credentials          => \&default_load_credentials,
-};
+    for my $arg ( keys %{$args} ) {
+        $self->$arg( delete $args->{$arg} ) if $self->can( $arg );
+    }
 
+   die "Unknown arguments to the constructor: " . join( " ", keys %$args )
+       if keys( %$args );
+
+    return $self;
+}
 
 sub connect {
-    my ( $class, @info ) = @_;
-    
-    print "Inside connect in ::root\n";
+    my ( $self, @info ) = @_;
 
-    my $config = $class->_make_config(@info);
+    if ( ! ref $self eq __PACKAGE__ ) {
+        return $self->new->connect(@info);
+    }
+
+    my $config = $self->_make_config(@info);
 
     # Take responsibility for passing through normal-looking
     # credentials.
-    $config = $class->load_credentials->($config)
+    $config = $self->default_load_credentials($config)
         unless $config->{dsn} =~ /dbi:/i;
 
-    return $class->SUPER::connect( __PACKAGE__->_dbi_credentials($config) );
+    return $self->SUPER::connect( $self->_dbi_credentials($config) );
 }
 
 # Normalize arguments into a single hash.  If we get a single hashref,
@@ -63,7 +78,12 @@ sub _dbi_credentials {
 }
 
 sub default_load_credentials {
-    my ( $connect_args ) = @_;
+    my ( $self, $connect_args ) = @_;
+
+    if ( $self->load_credentials ) {
+        return $self->load_credentials->( $self, $connect_args );
+    }
+
     require Config::Any; # Only loaded if we need to load credentials.
 
     # While ->connect is responsible for returning normal-looking
@@ -72,7 +92,7 @@ sub default_load_credentials {
     return $connect_args if $connect_args->{dsn} =~ /^dbi:/i; 
 
     my $ConfigAny = Config::Any->load_stems( 
-        { stems => __PACKAGE__->config_paths, use_ext => 1 } 
+        { stems => $self->config_paths, use_ext => 1 } 
     );
 
     for my $cfile ( @$ConfigAny ) {
@@ -80,7 +100,7 @@ sub default_load_credentials {
             for my $database ( keys %{$cfile->{$filename}} ) {
                 if ( $database eq $connect_args->{dsn} ) {
                     my $loaded_credentials = $cfile->{$filename}->{$database};
-                    return __PACKAGE__->filter_loaded_credentials->(
+                    return $self->default_filter_loaded_credentials(
                         $loaded_credentials,$connect_args
                     );
                 }
@@ -89,33 +109,35 @@ sub default_load_credentials {
     }
 }
 
+sub default_filter_loaded_credentials {
+    my ( $self, $loaded_credentials,$connect_args ) = @_;
+    if ( $self->filter_loaded_credentials ) {
+        return $self->filter_loaded_credentials->( 
+            $self, $loaded_credentials,$connect_args 
+        );
+    }
+    return $loaded_credentials;
+}
+
+sub config_paths {
+    my $self = shift;
+    $self->{config_paths} = shift if @_;
+    return $self->{config_paths};
+}
+
 sub filter_loaded_credentials {
-    my $class = shift;
-    $meta->{_filter_loaded_credentials} = shift if @_;
-    return $meta->{_filter_loaded_credentials};
+    my $self = shift;
+    $self->{filter_loaded_credentials} = shift if @_;
+    return $self->{filter_loaded_credentials};
 }
 
 sub load_credentials {
-    my $class = shift;
-    $meta->{_load_credentials} = shift if @_;
-    return $meta->{_load_credentials};
+    my $self = shift;
+    $self->{load_credentials} = shift if @_;
+    return $self->{load_credentials};
 }
 
-# Intended to be sub-classed, we'll just return the
-# credentials we used in the first place.
-#sub filter_loaded_credentials { $_[1] };
-
-sub config_paths {
-    my $class = shift;
-
-    @CONFIG_PATHS = @{ $_[0] } if @_;
-    return [ @CONFIG_PATHS ];
-}
-#__PACKAGE__->mk_classaccessor('config_paths'); 
-#__PACKAGE__->config_paths([('./dbic', $ENV{HOME} . '/.dbic', '/etc/dbic')]);
-
-
-
+1;
 
 =head1 NAME
 

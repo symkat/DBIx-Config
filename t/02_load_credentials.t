@@ -104,9 +104,10 @@ my $tests = [
 ];
 
 for my $test ( @$tests ) {
+    my $obj = DBIx::Config->new();
     is_deeply( 
-        DBIx::Config->load_credentials->( 
-            DBIx::Config->_make_config(
+        $obj->default_load_credentials( 
+            $obj->_make_config(
                 ref $test->{put} eq 'ARRAY' ? @{$test->{put}} : $test->{put})
         ), $test->{get}, $test->{title} );
 }

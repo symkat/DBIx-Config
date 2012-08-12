@@ -198,17 +198,26 @@ Of course, backwards compatibility is kept, so the following would also work:
 =head1 CONFIG FILES
 
 By default the following configuration files are examined, in order listed,
-for credentials.  The first file which has the given credentials is used.
-
-C<$ENV{DBIX_CONFIG_DIR}> can be configured at run-time, for instance:
-
-    DBIX_CONFIG_DIR="/var/local/" ./my_program.pl
+for credentials.  Configuration files are loaded with L<Config::Any>.  You
+should append the extention that Config::Any will recognize your file in
+to the list below.  For instance ./dbic will look for files such as
+C<./dbic.yaml>, C<./dbic.conf>, etc.  For documentation on acceptable files
+please see L<Config::Any>.  The first file which has the given credentials 
+is used.
 
 =over 4
 
 =item * C<$ENV{DBIX_CONFIG_DIR}> . '/dbic', 
 
+C<$ENV{DBIX_CONFIG_DIR}> can be configured at run-time, for instance:
+
+    DBIX_CONFIG_DIR="/var/local/" ./my_program.pl
+
 =item * C<$ENV{DBIX_CONFIG_DIR}> . '/dbi', 
+
+C<$ENV{DBIX_CONFIG_DIR}> can be configured at run-time, for instance:
+
+    DBIX_CONFIG_DIR="/var/local/" ./my_program.pl
 
 =item * ./dbic 
 

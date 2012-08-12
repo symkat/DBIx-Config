@@ -46,14 +46,25 @@ Of course, backwards compatibility is kept, so the following would also work:
 # CONFIG FILES
 
 By default the following configuration files are examined, in order listed,
-for credentials.  The first file which has the given credentials is used.
+for credentials.  Configuration files are loaded with [Config::Any](http://search.cpan.org/perldoc?Config::Any).  You
+should append the extention that Config::Any will recognize your file in
+to the list below.  For instance ./dbic will look for files such as
+`./dbic.yaml`, `./dbic.conf`, etc.  For documentation on acceptable files
+please see [Config::Any](http://search.cpan.org/perldoc?Config::Any).  The first file which has the given credentials 
+is used.
+
+- `$ENV{DBIX_CONFIG_DIR}` . '/dbic', 
 
 `$ENV{DBIX_CONFIG_DIR}` can be configured at run-time, for instance:
 
     DBIX_CONFIG_DIR="/var/local/" ./my_program.pl
 
-- `$ENV{DBIX_CONFIG_DIR}` . '/dbic', 
 - `$ENV{DBIX_CONFIG_DIR}` . '/dbi', 
+
+`$ENV{DBIX_CONFIG_DIR}` can be configured at run-time, for instance:
+
+    DBIX_CONFIG_DIR="/var/local/" ./my_program.pl
+
 - ./dbic 
 - ./dbi
 - $HOME/.dbic

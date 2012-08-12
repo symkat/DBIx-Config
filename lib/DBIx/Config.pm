@@ -42,7 +42,7 @@ sub get_env_vars {
 sub connect {
     my ( $self, @info ) = @_;
 
-    if ( ! ref $self eq __PACKAGE__ ) {
+    if ( ( ! ref($self) ) ||  ( ref($self) ne __PACKAGE__) ) {
         return $self->new->connect(@info);
     }
     
@@ -52,8 +52,7 @@ sub connect {
 sub connect_info {
     my ( $self, @info ) = @_;
 
-    #   warn "Found: \"$self(" . ref($self) . ")\"\n";
-    if ( ( ! ref($self) ) && (ref($self) eq __PACKAGE__) ) {
+    if ( ( ! ref($self) ) ||  ( ref($self) ne __PACKAGE__) ) {
         return $self->new->connect_info(@info);
     }
 

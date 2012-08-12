@@ -5,10 +5,8 @@ use DBIx::Config;
 use Test::More;
 use DBI;
 
-my $dbh = DBI->connect(     
-    DBIx::Config
-        ->new( { config_paths => [ "etc/config", "t/etc/config" ]  } )
-        ->connect_info("TEST") 
+my $dbh = DBI->connect( 
+    DBIx::Config->new->connect_info("dbi:SQLite:dbname=:memory:" ) 
 );
 
 ok my $sth = $dbh->prepare( "CREATE TABLE hash( key string, value string )" );

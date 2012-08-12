@@ -48,11 +48,18 @@ Of course, backwards compatibility is kept, so the following would also work:
 By default the following configuration files are examined, in order listed,
 for credentials.  The first file which has the given credentials is used.
 
+`$ENV{DBIX_CONFIG_DIR}` can be configured at run-time, for instance:
+
+    DBIX_CONFIG_DIR="/var/local/" ./my_program.pl
+
+- `$ENV{DBIX_CONFIG_DIR}` . '/dbic', 
+- `$ENV{DBIX_CONFIG_DIR}` . '/dbi', 
 - ./dbic 
 - ./dbi
 - $HOME/.dbic
 - $HOME/.dbi 
 - /etc/dbic
+- /etc/dbi
 - /etc/dbi
 
 # OVERRIDING

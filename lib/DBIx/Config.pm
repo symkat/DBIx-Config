@@ -12,9 +12,14 @@ sub new {
     
     my $self = bless {
         config_paths => [ 
-            './dbic', './dbi',  
-            $ENV{HOME} . '/.dbic',  $ENV{HOME} . '/.dbi',
-            '/etc/dbic', '/etc/dbi',
+            $ENV{DBIX_CONFIG_DIR} . '/dbic', 
+            $ENV{DBIX_CONFIG_DIR} . '/dbi',
+            './dbic', 
+            './dbi',  
+            $ENV{HOME} . '/.dbic',  
+            $ENV{HOME} . '/.dbi',
+            '/etc/dbic', 
+            '/etc/dbi',
         ],
     }, $class;
 
@@ -195,7 +200,15 @@ Of course, backwards compatibility is kept, so the following would also work:
 By default the following configuration files are examined, in order listed,
 for credentials.  The first file which has the given credentials is used.
 
+C<$ENV{DBIX_CONFIG_DIR}> can be configured at run-time, for instance:
+
+    DBIX_CONFIG_DIR="/var/local/" ./my_program.pl
+
 =over 4
+
+=item * C<$ENV{DBIX_CONFIG_DIR}> . '/dbic', 
+
+=item * C<$ENV{DBIX_CONFIG_DIR}> . '/dbi', 
 
 =item * ./dbic 
 
@@ -206,6 +219,8 @@ for credentials.  The first file which has the given credentials is used.
 =item * $HOME/.dbi 
 
 =item * /etc/dbic
+
+=item * /etc/dbi
 
 =item * /etc/dbi
 

@@ -43,6 +43,19 @@ Of course, backwards compatibility is kept, so the following would also work:
         },
     );
 
+For cases where you may use something like `DBIx::Connector`, a
+method is provided that will simply return the connection credentials:
+
+
+
+    !/usr/bin/perl
+    use warnings;
+    use strict;
+    use DBIx::Connector;
+    use DBIx::Config;
+
+    my $conn = DBIx::Connector->new(DBIx::Config->connect_info("MY_DATABASE"));
+
 # CONFIG FILES
 
 By default the following configuration files are examined, in order listed,
@@ -206,7 +219,7 @@ The function should return the same structure. For instance:
 
 # CONTRIBUTORS
 
-- Your Name (YourHandle )
+- Matt S. Trout (mst) _<mst@shadowcat.co.uk>_
 
 # COPYRIGHT
 

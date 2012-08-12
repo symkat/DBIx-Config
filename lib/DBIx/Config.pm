@@ -12,8 +12,7 @@ sub new {
     
     my $self = bless {
         config_paths => [ 
-            $ENV{DBIX_CONFIG_DIR} . '/dbic', 
-            $ENV{DBIX_CONFIG_DIR} . '/dbi',
+            get_env_vars(),
             './dbic', 
             './dbi',  
             $ENV{HOME} . '/.dbic',  
@@ -33,7 +32,26 @@ sub new {
     return $self;
 }
 
+sub get_env_vars {
+    if ( exists $ENV{DBIX_CONFIG_DIR} ) {
+        return ($ENV{DBIX_CONFIG_DIR}.'/dbic', $ENV{DBIX_CONFIG_DIR}.'/dbi');
+    }
+    return ();
+}
+
 sub connect {
+    my ( $self, @info ) = @_;
+
+    if ( ! ref $self eq __PACKAGE__ ) {
+        return $self->new->connect(@info);
+    }
+
+    my $config = $self->_make_config(@info);
+
+    return DBI->connect( $self->connect_info(@info) );
+}
+
+sub connect_info {
     my ( $self, @info ) = @_;
 
     if ( ! ref $self eq __PACKAGE__ ) {
@@ -47,7 +65,7 @@ sub connect {
     $config = $self->default_load_credentials($config)
         unless $config->{dsn} =~ /dbi:/i;
 
-    return DBI->connect( $self->_dbi_credentials($config) );
+    return $self->_dbi_credentials($config);
 }
 
 # Normalize arguments into a single hash.  If we get a single hashref,
@@ -194,6 +212,18 @@ Of course, backwards compatibility is kept, so the following would also work:
             TraceLevel => 1, 
         },
     );
+
+For cases where you may use something like C<DBIx::Connector>, a
+method is provided that will simply return the connection credentials:
+
+
+    !/usr/bin/perl
+    use warnings;
+    use strict;
+    use DBIx::Connector;
+    use DBIx::Config;
+
+    my $conn = DBIx::Connector->new(DBIx::Config->connect_info("MY_DATABASE"));
 
 =head1 CONFIG FILES
 
@@ -383,7 +413,7 @@ The function should return the same structure. For instance:
 
 =over 4
 
-=item * Your Name (YourHandle )
+=item * Matt S. Trout (mst) I<E<lt>mst@shadowcat.co.ukE<gt>>
 
 =back
 

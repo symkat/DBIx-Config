@@ -45,17 +45,16 @@ sub connect {
     if ( ! ref $self eq __PACKAGE__ ) {
         return $self->new->connect(@info);
     }
-
-    my $config = $self->_make_config(@info);
-
+    
     return DBI->connect( $self->connect_info(@info) );
 }
 
 sub connect_info {
     my ( $self, @info ) = @_;
 
-    if ( ! ref $self eq __PACKAGE__ ) {
-        return $self->new->connect(@info);
+    #   warn "Found: \"$self(" . ref($self) . ")\"\n";
+    if ( ( ! ref($self) ) && (ref($self) eq __PACKAGE__) ) {
+        return $self->new->connect_info(@info);
     }
 
     my $config = $self->_make_config(@info);

@@ -6,6 +6,7 @@ license         'perl';
 
 requires        'DBI'           => '0';
 requires        'Config::Any'   => '';
+requires        'File::HomeDir' => '';
 
 
 test_requires   'Test::More'            => '0.42';

@@ -3,8 +3,9 @@ use 5.005;
 use warnings;
 use strict;
 use DBI;
+use File::HomeDir;
 
-our $VERSION = '0.000001'; # 0.0.1
+our $VERSION = '0.000002'; # 0.0.2
 $VERSION = eval $VERSION;
 
 sub new {
@@ -15,11 +16,12 @@ sub new {
             get_env_vars(),
             './dbic', 
             './dbi',  
-            $ENV{HOME} . '/.dbic',  
-            $ENV{HOME} . '/.dbi',
+            File::HomeDir->my_home . '/.dbic',  
+            File::HomeDir->my_home . '/.dbi',
             '/etc/dbic', 
             '/etc/dbi',
         ],
+        config_files => [],
     }, $class;
 
     for my $arg ( keys %{$args} ) {
@@ -101,15 +103,15 @@ sub _dbi_credentials {
 }
 
 sub default_load_credentials {
-    my ( $self, $connect_args ) = @_;
-
+    my ( $self,  $connect_args ) = @_;
+    
     # To allow overriding without subclassing, if you pass a coderef
     # to ->load_credentials, we will replace our default load_credentials
     # without that function.
     if ( $self->load_credentials ) {
         return $self->load_credentials->( $self, $connect_args );
     }
-
+    
     require Config::Any; # Only loaded if we need to load credentials.
 
     # While ->connect is responsible for returning normal-looking
@@ -117,18 +119,31 @@ sub default_load_credentials {
     # independently unit tested.
     return $connect_args if $connect_args->{dsn} =~ /^dbi:/i; 
 
-    my $ConfigAny = Config::Any->load_stems( 
-        { stems => $self->config_paths, use_ext => 1 } 
+    # If we have ->config_files, we'll use those and load_files
+    # instead of the default load_stems.
+    my %cf_opts = ( use_ext => 1 );
+    my $ConfigAny = @{$self->config_files}
+        ? Config::Any->load_files({ files => $self->config_files, %cf_opts })
+        : Config::Any->load_stems({ stems => $self->config_paths, %cf_opts });
+
+    return $self->default_filter_loaded_credentials(
+        $self->_find_credentials( $connect_args, $ConfigAny ),
+        $connect_args
     );
 
+}
+
+# This will look through the data structure returned by Config::Any
+# and return the first instance of the database credentials it can
+# find.
+sub _find_credentials {
+    my ( $class, $connect_args, $ConfigAny ) = @_;
+    
     for my $cfile ( @$ConfigAny ) {
         for my $filename ( keys %$cfile ) {
             for my $database ( keys %{$cfile->{$filename}} ) {
                 if ( $database eq $connect_args->{dsn} ) {
-                    my $loaded_credentials = $cfile->{$filename}->{$database};
-                    return $self->default_filter_loaded_credentials(
-                        $loaded_credentials,$connect_args
-                    );
+                    return $cfile->{$filename}->{$database};
                 }
             }
         }
@@ -150,6 +165,12 @@ sub config_paths {
     my $self = shift;
     $self->{config_paths} = shift if @_;
     return $self->{config_paths};
+}
+
+sub config_files {
+    my $self = shift;
+    $self->{config_files} = shift if @_;
+    return $self->{config_files};
 }
 
 sub filter_loaded_credentials {
@@ -263,9 +284,32 @@ C<$ENV{DBIX_CONFIG_DIR}> can be configured at run-time, for instance:
 
 =back
 
-=head1 OVERRIDING
+=head1 USE SPECIFIC CONFIG FILES
 
-DBIx::Config 
+If you would rather explicitly state the configuration files you
+want loaded, you can use the class accessor C<config_files>
+instead.
+
+    #!/usr/bin/perl
+    use warnings;
+    use strict;
+    use DBIx::Config
+
+    my $DBI = DBIx::Config->new( config_files => [
+        '/var/www/secret/dbic.yaml',
+        '/opt/database.yaml',
+    ]);
+    my $dbh = $DBI->connect( "MY_DATABASE" );
+
+This will check the files, C</var/www/secret/dbic.yaml>, 
+and C</opt/database.yaml> in the same way as C<config_paths>, 
+however it will only check the specific files, instead of checking 
+for each extension that L<Config::Any> supports.  You MUST use the 
+extension that corresponds to the file type you are loading.  
+See L<Config::Any> for information on supported file types and 
+extension mapping.
+
+=head1 OVERRIDING
 
 =head2 config_files
 
@@ -276,10 +320,11 @@ The configuration files may be changed by setting an accessor:
     use strict;
     use DBIx::Config
 
-    my $DBI = DBIx::Config->new(config_files => ['./dbcreds', '/etc/dbcreds']);
+    my $DBI = DBIx::Config->new(config_paths => ['./dbcreds', '/etc/dbcreds']);
     my $dbh = $DBI->connect( "MY_DATABASE" );
 
-This would check, in order, C<dbcreds> in the current directory, and then C</etc/dbcreds>
+This would check, in order, C<dbcreds> in the current directory, and then C</etc/dbcreds>,
+checking for valid configuration file extentions appended to the given file.
 
 =head2 filter_loaded_credentials
 

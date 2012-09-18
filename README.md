@@ -66,13 +66,13 @@ to the list below.  For instance ./dbic will look for files such as
 please see [Config::Any](http://search.cpan.org/perldoc?Config::Any).  The first file which has the given credentials 
 is used.
 
-- `$ENV{DBIX_CONFIG_DIR}` . '/dbic', 
+- \`$ENV{DBIX\_CONFIG\_DIR}\` . '/dbic', 
 
 `$ENV{DBIX_CONFIG_DIR}` can be configured at run-time, for instance:
 
     DBIX_CONFIG_DIR="/var/local/" ./my_program.pl
 
-- `$ENV{DBIX_CONFIG_DIR}` . '/dbi', 
+- \`$ENV{DBIX\_CONFIG\_DIR}\` . '/dbi', 
 
 `$ENV{DBIX_CONFIG_DIR}` can be configured at run-time, for instance:
 
@@ -86,9 +86,32 @@ is used.
 - /etc/dbi
 - /etc/dbi
 
-# OVERRIDING
+# USE SPECIFIC CONFIG FILES
 
-DBIx::Config 
+If you would rather explicitly state the configuration files you
+want loaded, you can use the class accessor `config_files`
+instead.
+
+    #!/usr/bin/perl
+    use warnings;
+    use strict;
+    use DBIx::Config
+
+    my $DBI = DBIx::Config->new( config_files => [
+        '/var/www/secret/dbic.yaml',
+        '/opt/database.yaml',
+    ]);
+    my $dbh = $DBI->connect( "MY_DATABASE" );
+
+This will check the files, `/var/www/secret/dbic.yaml`, 
+and `/opt/database.yaml` in the same way as `config_paths`, 
+however it will only check the specific files, instead of checking 
+for each extension that [Config::Any](http://search.cpan.org/perldoc?Config::Any) supports.  You MUST use the 
+extension that corresponds to the file type you are loading.  
+See [Config::Any](http://search.cpan.org/perldoc?Config::Any) for information on supported file types and 
+extension mapping.
+
+# OVERRIDING
 
 ## config\_files
 
@@ -99,10 +122,11 @@ The configuration files may be changed by setting an accessor:
     use strict;
     use DBIx::Config
 
-    my $DBI = DBIx::Config->new(config_files => ['./dbcreds', '/etc/dbcreds']);
+    my $DBI = DBIx::Config->new(config_paths => ['./dbcreds', '/etc/dbcreds']);
     my $dbh = $DBI->connect( "MY_DATABASE" );
 
-This would check, in order, `dbcreds` in the current directory, and then `/etc/dbcreds`
+This would check, in order, `dbcreds` in the current directory, and then `/etc/dbcreds`,
+checking for valid configuration file extentions appended to the given file.
 
 ## filter\_loaded\_credentials
 
@@ -121,9 +145,9 @@ structure used to connect.
 
 Your coderef will take three arguments.  
 
-- `$self`, the instance of DBIx::Config your code was called from. C
-- `$loaded_credentials`, the credentials loaded from the config file.
-- `$connect_args`, the normalized data structure of the inital `connect` call.
+- \`$self\`, the instance of DBIx::Config your code was called from. C
+- \`$loaded\_credentials\`, the credentials loaded from the config file.
+- \`$connect\_args\`, the normalized data structure of the inital \`connect\` call.
 
 Your coderef should return the same structure given by `$loaded_credentials`.
 
@@ -211,15 +235,15 @@ The function should return the same structure. For instance:
 
 # SEE ALSO
 
-- [DBIx::Class::Schema::Config](http://search.cpan.org/perldoc?DBIx::Class::Schema::Config)
+- \[DBIx::Class::Schema::Config\](http://search.cpan.org/perldoc?DBIx::Class::Schema::Config)
 
 # AUTHOR
 
-- Kaitlyn Parkhurst (SymKat) _<symkat@symkat.com>_ ([http://symkat.com/](http://symkat.com/))
+- Kaitlyn Parkhurst (SymKat) \_<symkat@symkat.com>\_ (\[http://symkat.com/\](http://symkat.com/))
 
 # CONTRIBUTORS
 
-- Matt S. Trout (mst) _<mst@shadowcat.co.uk>_
+- Matt S. Trout (mst) \_<mst@shadowcat.co.uk>\_
 
 # COPYRIGHT
 

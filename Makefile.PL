@@ -5,8 +5,8 @@ all_from        'lib/DBIx/Config.pm';
 license         'perl';
 
 requires        'DBI'           => '0';
-requires        'Config::Any'   => '';
-requires        'File::HomeDir' => '';
+requires        'Config::Any'   => '0';
+requires        'File::HomeDir' => '0';
 
 
 test_requires   'Test::More'            => '0.42';

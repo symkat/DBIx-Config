@@ -1,0 +1,6 @@
+0.0.3
+    - Add '.' to @INC so Module::Install continues to work.
+0.0.2
+    - No changes recorded
+0.0.1
+    - Initial Version

@@ -1,5 +1,6 @@
 0.0.5
     - Added .travis.yml for testing
+    - Fixed hash randomization error in test file (RT: #112888 PR: #4)
 0.0.4
     - Add '.' to @INC so Module::Install continues to work,
       this time for real.

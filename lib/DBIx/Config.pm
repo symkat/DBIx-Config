@@ -5,7 +5,7 @@ use strict;
 use DBI;
 use File::HomeDir;
 
-our $VERSION = '0.000004'; # 0.0.4
+our $VERSION = '0.000005'; # 0.0.5
 $VERSION = eval $VERSION;
 
 sub new {
